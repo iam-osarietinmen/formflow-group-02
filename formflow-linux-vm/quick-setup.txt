@@ -1,0 +1,64 @@
+1. Make sure the files exist on the VM
+SSH into your Linux VM and create the required structure if it doesn’t exist yet:
+
+ssh your-user@YOUR_VM_PUBLIC_IP
+sudo mkdir -p /opt/formflow/{deployment,nginx}
+sudo chown -R $USER:$USER /opt/formflow
+cd /opt/formflow
+
+# Then create the files in this folder <formflow-linux-vm>
+
+# Then create these files (you can copy-paste the content):
+
+docker-compose.yml
+deployment/db.env
+deployment/backend.env
+deployment/frontend.env
+nginx/nginx.conf
+
+---
+
+2. Update the image tags in docker-compose.yml
+
+Open the file and change the versions to the ones you just pushed:
+nano docker-compose.yml
+Change these two lines to match the tags you pushed:
+YAMLimage: yourusername/formflow-backend:1.0.0      # ← put your real tag here
+image: yourusername/formflow-frontend:1.0.0     # ← put your real tag here
+
+---
+
+3. Login to Docker Hub on the Linux VM (important)
+docker login
+# enter your Docker Hub username and password/token
+
+---
+
+4. Pull the images and start the stack
+
+cd /opt/formflow
+docker compose pull
+docker compose up -d
+
+---
+
+5. Verify everything is running
+
+# Check containers
+docker compose ps
+
+# Check logs if needed
+docker compose logs backend --tail 30
+docker compose logs frontend --tail 30
+docker compose logs nginx --tail 20
+
+# Test from the VM
+curl http://localhost/healthz
+curl http://localhost/api/health
+
+# Then open your browser:
+http://YOUR_VM_PUBLIC_IP
+
+---
+
+
