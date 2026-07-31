@@ -8,7 +8,6 @@ on:
 
 permissions:
     contents: read
-    id-token: write
 
 concurrency:
     group: formflow-production
@@ -29,11 +28,10 @@ jobs:
         timeout-minutes: 45
 
         env:
-            ARM_USE_OIDC: "true"
-            ARM_USE_AZUREAD: "true"
             ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
             ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
             ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+            ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
             TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
             TF_VAR_ssh_public_key: ${{ secrets.VM_SSH_PUBLIC_KEY }}
             TF_VAR_project_name: ${{ vars.PROJECT_NAME || 'formflow' }}
@@ -60,12 +58,16 @@ jobs:
                   echo "version=$VERSION" >> $GITHUB_OUTPUT
                   echo "Deploying version: $VERSION"
 
-            - name: Log in to Azure with OIDC
+            # -------------------------------------------------
+            # Log in to Azure with Service Principal + Secret
+            # -------------------------------------------------
+            - name: Log in to Azure with Service Principal + Secret
               uses: azure/login@v3
               with:
                   client-id: ${{ secrets.AZURE_CLIENT_ID }}
                   tenant-id: ${{ secrets.AZURE_TENANT_ID }}
                   subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+                  client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
 
             - name: Set up Terraform
               uses: hashicorp/setup-terraform@v3
@@ -85,11 +87,10 @@ jobs:
                     -backend-config="storage_account_name=${{ vars.TF_STATE_STORAGE_ACCOUNT }}" \
                     -backend-config="container_name=${{ vars.TF_STATE_CONTAINER || 'tfstate' }}" \
                     -backend-config="key=${{ vars.TF_STATE_KEY || 'formflow-prod.tfstate' }}" \
-                    -backend-config="use_oidc=true" \
-                    -backend-config="use_azuread_auth=true" \
                     -backend-config="tenant_id=${{ secrets.AZURE_TENANT_ID }}" \
                     -backend-config="client_id=${{ secrets.AZURE_CLIENT_ID }}" \
-                    -backend-config="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+                    -backend-config="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
+                    -backend-config="client_secret=${{ secrets.AZURE_CLIENT_SECRET }}"
 
             - name: Terraform validate
               working-directory: ${{ env.TF_WORKING_DIR }}
