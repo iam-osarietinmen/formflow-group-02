@@ -37,7 +37,7 @@ jobs:
             TF_VAR_project_name: ${{ vars.PROJECT_NAME || 'formflow' }}
             TF_VAR_environment: prod
             TF_VAR_location: ${{ vars.AZURE_LOCATION || 'uksouth' }}
-            TF_VAR_vm_size: ${{ vars.VM_SIZE || 'Standard_B2s' }}
+            TF_VAR_vm_size: ${{ vars.VM_SIZE || 'Standard_B1ls' }}
             TF_VAR_admin_username: ${{ vars.VM_USERNAME || 'formflowadmin' }}
 
         steps:
